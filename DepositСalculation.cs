@@ -1,18 +1,12 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
 
-internal class Program
+internal class DepositCalculation
 {   
-    public struct YearlyDeposit
+    public struct YearlyDeposit(int year, decimal deposit)
     {
-        public int Year { get; set; }
-        public decimal Deposit { get; set; }
-        public YearlyDeposit(int year, decimal deposit)
-        {
-            Year = year;
-            Deposit = deposit;
-        }
+        public int Year { get; set; } = year;
+        public decimal Deposit { get; set; } = deposit;
     }
     private static void Main(string[] args)
     {
@@ -29,22 +23,15 @@ internal class Program
             CalculationInitialDeposit(initial_deposit, years, interest_rate)
         ));
     }
-    public static void CheckPositive<T>(T value, string text) where T : INumber<T>
-    {
-        if (value <= T.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), text);
-        }
-    }
     public static List<YearlyDeposit> CalculationInitialDeposit(
         decimal initial_deposit,
         int years,
         decimal interest_rate)
     {
         #region Валидация
-        CheckPositive(initial_deposit, "Отрицательный депозит");
-        CheckPositive(years, "Отрицательный год");
-        CheckPositive(interest_rate, "Отрицательный процент");
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(initial_deposit);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(years);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(interest_rate);
         #endregion
 
         var result = new List<YearlyDeposit>();
@@ -60,6 +47,8 @@ internal class Program
     }
     public static string ParseYearlyDepositToString(List<YearlyDeposit> records)
     {
+        ArgumentNullException.ThrowIfNull(records);
+
         var result = new StringBuilder();
         
         foreach (var item in records)
