@@ -1,62 +1,45 @@
-﻿using System.Numerics;
-using System.Text;
+﻿namespace DepositCalculator;
 
-internal class DepositCalculation
-{   
-    public struct YearlyDeposit(int year, decimal deposit)
-    {
-        public int Year { get; set; } = year;
-        public decimal Deposit { get; set; } = deposit;
-    }
-    private static void Main(string[] args)
-    {
-        Console.Write("Введите размер начального вклада: ");
-        decimal initial_deposit = Convert.ToDecimal(Console.ReadLine());
+/// <summary>
+/// Выполняет расчёт вклада с ежегодной капитализацией процентов.
+/// </summary>
+public static class DepositCalculator
+{
+    /// <summary>
+    /// Делитель для перевода процентов в доли.
+    /// </summary>
+    private const decimal PercentDivisor = 100m;
 
-        Console.Write("Введите количество лет: ");
-        int years = Convert.ToInt32(Console.ReadLine());
-
-        Console.Write("Введите годовую процентную ставку: ");
-        decimal interest_rate = Convert.ToDecimal(Console.ReadLine());
-
-        Console.WriteLine(ParseYearlyDepositToString(
-            CalculationInitialDeposit(initial_deposit, years, interest_rate)
-        ));
-    }
-    public static List<YearlyDeposit> CalculationInitialDeposit(
-        decimal initial_deposit,
+    /// <summary>
+    /// Рассчитывает размер вклада на конец каждого года с ежегодной капитализацией процентов.
+    /// </summary>
+    /// <param name="initialDeposit">Начальная сумма вклада. Должна быть больше нуля.</param>
+    /// <param name="years">Срок вклада в годах. Должен быть больше нуля.</param>
+    /// <param name="interestRate">Годовая процентная ставка в процентах (например, 7.5). Не может быть отрицательной.</param>
+    /// <returns>Список записей по каждому году, начиная со следующего за текущим.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Если <paramref name="initialDeposit"/> или <paramref name="years"/> не положительны,
+    /// либо <paramref name="interestRate"/> отрицательна.
+    /// </exception>
+    public static IReadOnlyList<YearlyDeposit> CalculateYearlyDeposits(
+        decimal initialDeposit,
         int years,
-        decimal interest_rate)
+        decimal interestRate)
     {
-        #region Валидация
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(initial_deposit);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(initialDeposit);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(years);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(interest_rate);
-        #endregion
+        ArgumentOutOfRangeException.ThrowIfNegative(interestRate);
 
-        var result = new List<YearlyDeposit>();
+        int startYear = DateTime.Now.Year;
+        decimal currentDeposit = initialDeposit;
+        var result = new List<YearlyDeposit>(years);
 
         for (int i = 1; i <= years; i++)
         {
-            initial_deposit += initial_deposit * (interest_rate / 100);
-            var record = new YearlyDeposit(DateTime.Now.Year + i, initial_deposit);
-            result.Add(record);
+            currentDeposit += currentDeposit * interestRate / PercentDivisor;
+            result.Add(new YearlyDeposit(startYear + i, currentDeposit));
         }
 
         return result;
     }
-    public static string ParseYearlyDepositToString(List<YearlyDeposit> records)
-    {
-        ArgumentNullException.ThrowIfNull(records);
-
-        var result = new StringBuilder();
-        
-        foreach (var item in records)
-        {
-            result.Append($"Год: {item.Year}: {item.Deposit:F2} Руб.\n");
-        }
-
-        return result.ToString();
-    }
-
 }
